@@ -74,6 +74,11 @@ const generateVerificationToken = () => {
 
 // Send an email with a verification link
 const sendVerificationEmail = async (email, token) => {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+        console.log("Skipping verification email because GMAIL_USER or GMAIL_PASS is not set.");
+        return null;
+    }
+
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -131,7 +136,9 @@ const signUp = (req, res) => {
                                     User.deleteOne({ _id: userDetails });
                                     res.json({ message: "error", errors: [error2.message] });
                                 } else {
-                                    let resp = sendVerificationEmail(userDetails.email, verificationToken.token);
+                                    sendVerificationEmail(userDetails.email, verificationToken.token).catch((error) => {
+                                        console.error("Failed to send verification email:", error.message);
+                                    });
                                     res.json({ message: "success" });
                                 }
                             }
@@ -151,7 +158,9 @@ const signUp = (req, res) => {
                                     User.deleteOne({ _id: userDetails });
                                     res.json({ message: "error", errors: [error2.message] });
                                 } else {
-                                    let resp = sendVerificationEmail(userDetails.email, verificationToken.token);
+                                    sendVerificationEmail(userDetails.email, verificationToken.token).catch((error) => {
+                                        console.error("Failed to send verification email:", error.message);
+                                    });
                                     res.json({ message: "success" });
                                 }
                             }

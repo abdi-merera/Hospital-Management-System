@@ -15,7 +15,9 @@ function AddUser() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [userType, setUserType] = useState('');
+  const [userType, setUserType] = useState('Staff');
+  const [roles, setRoles] = useState([]);
+  const [selectedRoleId, setSelectedRoleId] = useState('');
   const [passwordMatchDisplay, setPasswordMatchDisplay] = useState('none');
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('')
   const [errorDialogueBoxOpen, setErrorDialogueBoxOpen] = useState(false);
@@ -39,7 +41,8 @@ function AddUser() {
       email: form.email.value,
       password: form.password.value,
       confirmPassword: form.confirmPassword.value,
-      userType: form.userType.value
+      userType: form.userType.value,
+      roleIds: selectedRoleId ? [selectedRoleId] : [],
     }
 
 
@@ -67,6 +70,17 @@ function AddUser() {
   };
 
   useEffect(() => {
+    fetch('http://localhost:3001/roles', {
+      headers: {
+        authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    })
+      .then(response => response.json())
+      .then(data => setRoles(data.roles || []))
+      .catch(() => setRoles([]));
+  }, []);
+
+  useEffect(() => {
     if (password.length > 0 && password?.trim()?.length <= 6) {
       setPasswordValidationMessage('Password Length must be greater than 6 characters');
     }
@@ -81,12 +95,31 @@ function AddUser() {
     }
   }, [password, confirmPassword])
 
+  const filteredRoles = roles.filter((role) => {
+    if (userType === 'Patient') return role.name === 'Patient';
+    if (userType === 'Staff') return role.name !== 'Patient';
+    return role.name !== 'Patient';
+  });
+
+  useEffect(() => {
+    if (userType === 'Patient') {
+      const patientRole = roles.find((role) => role.name === 'Patient');
+      setSelectedRoleId(patientRole?._id || '');
+      return;
+    }
+
+    const selectedRole = roles.find((role) => role._id === selectedRoleId);
+    if (selectedRole?.name === 'Patient') {
+      setSelectedRoleId('');
+    }
+  }, [roles, selectedRoleId, userType]);
+
   return (
     <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-      <div class="page-wrapper">
+      <div className="page-wrapper">
         <div className="content">
 
-          <div class="card-box">
+          <div className="card-box">
             <div className="row">
               <div className="col-lg-8 offset-lg-2">
                 <h4 className="page-title">Add User</h4>
@@ -135,12 +168,25 @@ function AddUser() {
                     </div>
                     <div className="col-sm-6">
                       <div className="form-group">
-                        <label>Role</label>
+                        <label>Account Type</label>
                         <select name="userType" className="form-select" value={userType} onChange={(event) => setUserType(event.target.value)}>
                           <option value="Admin">Admin</option>
-                          <option value="Doctor">Doctor</option>
+                          <option value="Staff">Staff</option>
                           <option value="Patient">Patient</option>
                         </select>
+                        <small className="text-muted">This controls the dashboard type.</small>
+                      </div>
+                    </div>
+                    <div className="col-sm-6">
+                      <div className="form-group">
+                        <label>Access Roles</label>
+                        <select className="form-select" value={selectedRoleId} onChange={(event) => setSelectedRoleId(event.target.value)}>
+                          <option value="">Default for account type</option>
+                          {filteredRoles.map((role) => (
+                            <option key={role._id} value={role._id}>{role.name}</option>
+                          ))}
+                        </select>
+                        <small className="text-muted">Leave as default to use the standard role for the account type.</small>
                       </div>
                     </div>
                   </div>
@@ -165,3 +211,4 @@ function AddUser() {
 }
 
 export default AddUser;
+

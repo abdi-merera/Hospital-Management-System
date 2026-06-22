@@ -24,12 +24,12 @@ const columns = [
     { id: 'Phone', label: 'Phone', minWidth: 170 },
     { id: 'Gender', label: 'Gender', minWidth: 170 },
     { id: 'Address', label: 'Address', minWidth: 170 },
-    { id: 'DOB', label: 'DOB', minWidth: 170 },
+    { id: 'Age', label: 'Age', minWidth: 120 },
     { id: 'actionsID', label: 'Actions', minWidth: 100 },
 ];
 
-function createData(Name, Email, Phone, Gender, Address, DOB, actionsID) {
-    return { Name, Email, Phone, Gender, Address, DOB, actionsID };
+function createData(Name, Email, Phone, Gender, Address, Age, actionsID) {
+    return { Name, Email, Phone, Gender, Address, Age, actionsID };
 }
 
 // const rows = [
@@ -42,7 +42,7 @@ function createData(Name, Email, Phone, Gender, Address, DOB, actionsID) {
 
 // ];
 
-export default function UserTable({ patientList, deletePatient }) {
+export default function UserTable({ patientList, deletePatient, canUpdatePatient = false, canDeletePatient = false }) {
     const [page, setPage] = React.useState(0);
     // const [rows, setRows] = React.useState([]);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
@@ -77,7 +77,7 @@ export default function UserTable({ patientList, deletePatient }) {
             patient.phone,
             patient.gender,
             patient.address,
-            patient.dob,
+            patient.age || '',
             patient._id
         )
     })
@@ -121,32 +121,39 @@ export default function UserTable({ patientList, deletePatient }) {
                                             if (column.id === 'actionsID') {
                                                 return (
                                                     <TableCell key={column.id} align={column.align}>
-                                                        <Tooltip title="Edit" placement="top" arrow>
-                                                            <EditIcon
-                                                                className="mx-2"
-                                                                style={{ color: '#ff6600', fontSize: 30 }}
-                                                                onClick={() => {
-                                                                    navigate(`/patients/edit/${value}`);
-                                                                }}
-                                                            />
-                                                        </Tooltip>
-                                                        <Tooltip title="Delete" placement="top" arrow>
-                                                            <DeleteIcon
-                                                                className="mx-2"
-                                                                style={{ color: 'red', fontSize: 30 }}
-                                                                onClick={handleDeleteDialogueOpen}
-                                                            />
-                                                        </Tooltip>
-                                                        <ConfirmDeleteDialogue
-                                                            title="Confirm Delete"
-                                                            message="Are you sure you want to delete this record? This action cannot be undone."
-                                                            open={openConfirmDeleteDialogue}
-                                                            handleClose={handleDeleteDialogueClose}
-                                                            handleDelete={() => {
-                                                                deletePatient(value);
-                                                                handleDeleteDialogueClose();
-                                                            }}
-                                                        />
+                                                        {canUpdatePatient && (
+                                                            <Tooltip title="Edit" placement="top" arrow>
+                                                                <EditIcon
+                                                                    className="mx-2"
+                                                                    style={{ color: '#ff6600', fontSize: 30 }}
+                                                                    onClick={() => {
+                                                                        navigate(`/patients/edit/${value}`);
+                                                                    }}
+                                                                />
+                                                            </Tooltip>
+                                                        )}
+                                                        {canDeletePatient && (
+                                                            <>
+                                                                <Tooltip title="Delete" placement="top" arrow>
+                                                                    <DeleteIcon
+                                                                        className="mx-2"
+                                                                        style={{ color: 'red', fontSize: 30 }}
+                                                                        onClick={handleDeleteDialogueOpen}
+                                                                    />
+                                                                </Tooltip>
+                                                                <ConfirmDeleteDialogue
+                                                                    title="Confirm Delete"
+                                                                    message="Are you sure you want to delete this record? This action cannot be undone."
+                                                                    open={openConfirmDeleteDialogue}
+                                                                    handleClose={handleDeleteDialogueClose}
+                                                                    handleDelete={() => {
+                                                                        deletePatient(value);
+                                                                        handleDeleteDialogueClose();
+                                                                    }}
+                                                                />
+                                                            </>
+                                                        )}
+                                                        {!canUpdatePatient && !canDeletePatient && '-'}
                                                     </TableCell>
                                                 );
                                             }

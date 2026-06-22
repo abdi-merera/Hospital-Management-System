@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const Doctor = require("../../models/doctor");
+const User = require("../../models/user");
 
 
 function doctorAuth(req, res, next) {
@@ -20,10 +21,18 @@ function doctorAuth(req, res, next) {
             "userType": payload.userType
         };
         // console.log("doctorAuth ", payload);
-        if (payload.userType == "Doctor") {
+        if (payload.userType == "Doctor" || payload.userType == "Staff") {
+            const user = await User.findById(payload.id).populate('roles');
+            const hasDoctorRole = payload.userType == "Doctor" || user?.roles?.some((role) => role.name === 'Doctor');
+
+            if (!hasDoctorRole) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+
             let doctor = await Doctor.findOne({
                 'userId': mongoose.Types.ObjectId(req.sender.id)
             })
+            if (!doctor) return res.status(401).json({ message: 'Unauthorized' });
             req.sender.doctorId = doctor._id;
             next();
         }

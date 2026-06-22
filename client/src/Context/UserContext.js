@@ -8,7 +8,7 @@ const UserContextProvider = ({ children }) => {
 
   const signOutUser = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("currentUser");
     setCurrentUser({});
     setIsLoggedIn(false);
   }

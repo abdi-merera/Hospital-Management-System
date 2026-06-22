@@ -4,14 +4,13 @@ const getMedicines = async (req, res) => {
 
     try {
 
-        var name = req.query.name;
+        var name = req.query.name ? String(req.query.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
 
         let medicines = [];
         if (!name) {
             medicines = await Medicine.find({});
         } else {
-
-            medicines = await Medicine.find({ "name": name });
+            medicines = await Medicine.find({ "name": { $regex: new RegExp(`^${name}$`, 'i') } });
         }
 
         res.json(medicines);

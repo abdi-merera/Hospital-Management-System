@@ -26,7 +26,7 @@ const getAppointments = async (req, res) => {
                 appointments = await Appointment.find({
                     'isTimeSlotAvailable': isTimeSlotAvailable,
                     'appointmentDate': appointmentDate,
-                    'doctorId': mongoose.Types.ObjectId(docID)
+                    'doctorId': new mongoose.Types.ObjectId(docID)
                 });
             }
             else if (req.sender.userType == "Doctor") {
@@ -56,7 +56,7 @@ const getAppointments = async (req, res) => {
                     "completed": false
                 }
                 if (docID) {
-                    query.doctorId = mongoose.Types.ObjectId(docID)
+                    query.doctorId = new mongoose.Types.ObjectId(docID)
                 }
                 // appointments = await Appointment.find(query).lean();
                 appointments = await Appointment.find(query)
@@ -74,14 +74,13 @@ const getAppointments = async (req, res) => {
                     });
             }
             else if (req.sender.userType == "Patient") {
-                console.log("patientId" , req.sender.patientId);
                 let query = {
                     'isTimeSlotAvailable': false,
                     'completed': false,
                     'patientId': req.sender.patientId
                 }
                 if (docID){
-                    query.doctorId = mongoose.Types.ObjectId(docID)
+                    query.doctorId = new mongoose.Types.ObjectId(docID)
                 }
                 if (appointmentDate) {
                     query.appointmentDate = appointmentDate
@@ -136,7 +135,7 @@ const createAppointmentSlot = async (req, res) => {
         let timeSlots = req.body.timeSlots;
         let docID = req.body.doctorID;
         // console.log(slot)
-        for (slot of timeSlots) {
+        for (const slot of timeSlots) {
             let app = await Appointment.find({
                 'appointmentDate': appDate,
                 'appointmentTime': slot,
@@ -165,10 +164,10 @@ const bookAppointment = async (req, res) => {
             'isTimeSlotAvailable': true,
             'appointmentDate': req.body.appDate,
             'appointmentTime': req.body.appTime,
-            'doctorId': mongoose.Types.ObjectId(req.body.doctorId)
+            'doctorId': new mongoose.Types.ObjectId(req.body.doctorId)
         }, {
             'isTimeSlotAvailable': false,
-            'patientId': mongoose.Types.ObjectId(req.body.patientId)
+            'patientId': new mongoose.Types.ObjectId(req.body.patientId)
         });
         // console.log("appointment",appointment);
         if (appointment) {
@@ -215,8 +214,8 @@ const updateAppointmentById = async (req, res) => {
                 'isTimeSlotAvailable': false,
                 'appointmentDate': req.body.appDate,
                 'appointmentTime': req.body.appTime,
-                'doctorId': mongoose.Types.ObjectId(req.body.doctorId),
-                'patientId': mongoose.Types.ObjectId(req.body.patientId)
+                'doctorId': new mongoose.Types.ObjectId(req.body.doctorId),
+                'patientId': new mongoose.Types.ObjectId(req.body.patientId)
             });
         if (appointment) {
             const openSlot = await Appointment.findOneAndDelete({

@@ -1,4 +1,3 @@
-import styles from './Header.module.css'
 import MuiAppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
@@ -36,6 +35,10 @@ const Header = ({ open, handleDrawerOpen, headerTitle }) => {
   const navigate = useNavigate();
   const { isLoggedIn, currentUser, signOutUser } = useContext(UserContext);
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const roleNames = (currentUser?.roles || [])
+    .map((role) => (typeof role === 'string' ? role : role.name))
+    .filter(Boolean);
+  const accountLabel = roleNames.length > 0 ? roleNames.join(', ') : currentUser?.userType;
   const redirectToHome = () => {
     navigate("/");
   }
@@ -74,7 +77,7 @@ const Header = ({ open, handleDrawerOpen, headerTitle }) => {
           Green Hills Hospital
         </Typography>
         {isLoggedIn && (
-          <div className={styles.accountIcon}>
+          <div className="max-[720px]:hidden">
             <IconButton
               size="large"
               aria-label="account of current user"
@@ -87,7 +90,7 @@ const Header = ({ open, handleDrawerOpen, headerTitle }) => {
               <AccountCircle style={{ fontSize: 42, marginRight: 8 }} />
               <div style={{ display: 'flex', flexDirection: "column", alignItems: "start" }} >
                 <span style={{ fontSize: 19, color: 'grey', marginTop: 3 }} > {currentUser.firstName} {currentUser.lastName}</span>
-                <span style={{ fontSize: 12, color: 'grey' }} > {currentUser.userType}</span>
+                <span style={{ fontSize: 12, color: 'grey' }} > {accountLabel}</span>
               </div>
 
 

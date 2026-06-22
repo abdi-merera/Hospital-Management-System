@@ -17,6 +17,8 @@ function EditUser() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [userType, setUserType] = useState('');
+  const [roles, setRoles] = useState([]);
+  const [selectedRoleId, setSelectedRoleId] = useState('');
   const [passwordMatchDisplay, setPasswordMatchDisplay] = useState('none');
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
   const { id } = useParams();
@@ -33,7 +35,21 @@ function EditUser() {
 
   useEffect(() => {
     getUserById();
+    getRoles();
   }, []);
+
+  const getRoles = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/roles', {
+        headers: {
+          authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      setRoles(response.data.roles || []);
+    } catch (error) {
+      setRoles([]);
+    }
+  };
 
   const getUserById = async () => {
     const response = await axios.get(`http://localhost:3001/users/${id}`, {
@@ -48,6 +64,7 @@ function EditUser() {
     setPassword(response.data.password);
     setConfirmPassword(response.data.password);
     setUserType(response.data.userType);
+    setSelectedRoleId((response.data.roles || [])[0]?._id || (response.data.roles || [])[0] || '');
   };
 
   const updateUser = async (e) => {
@@ -61,7 +78,8 @@ function EditUser() {
           email,
           password,
           confirmPassword,
-          userType
+          userType,
+          roleIds: selectedRoleId ? [selectedRoleId] : [],
         },
         {
           headers: {
@@ -93,12 +111,31 @@ function EditUser() {
     }
   }, [password, confirmPassword])
 
+  const filteredRoles = roles.filter((role) => {
+    if (userType === 'Patient') return role.name === 'Patient';
+    if (userType === 'Staff') return role.name !== 'Patient';
+    return role.name !== 'Patient';
+  });
+
+  useEffect(() => {
+    if (userType === 'Patient') {
+      const patientRole = roles.find((role) => role.name === 'Patient');
+      setSelectedRoleId(patientRole?._id || '');
+      return;
+    }
+
+    const selectedRole = roles.find((role) => role._id === selectedRoleId);
+    if (selectedRole?.name === 'Patient') {
+      setSelectedRoleId('');
+    }
+  }, [roles, selectedRoleId, userType]);
+
   return (
     <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-      <div class="page-wrapper">
+      <div className="page-wrapper">
         <div className="content">
 
-          <div class="card-box">
+          <div className="card-box">
             <div className="row">
               <div className="col-lg-8 offset-lg-2">
                 <h3 className="page-title">Edit User</h3>
@@ -148,12 +185,25 @@ function EditUser() {
 
                     <div className="col-sm-6">
                       <div className="form-group">
-                        <label>Role</label>
+                        <label>Account Type</label>
                         <select name="userType" className="form-select" value={userType} onChange={(event) => setUserType(event.target.value)}>
                           <option value="Admin">Admin</option>
-                          <option value="Doctor">Doctor</option>
+                          <option value="Staff">Staff</option>
                           <option value="Patient">Patient</option>
                         </select>
+                        <small className="text-muted">This controls the dashboard type.</small>
+                      </div>
+                    </div>
+                    <div className="col-sm-6">
+                      <div className="form-group">
+                        <label>Access Roles</label>
+                        <select className="form-select" value={selectedRoleId} onChange={(event) => setSelectedRoleId(event.target.value)}>
+                          <option value="">Default for account type</option>
+                          {filteredRoles.map((role) => (
+                            <option key={role._id} value={role._id}>{role.name}</option>
+                          ))}
+                        </select>
+                        <small className="text-muted">Leave as default to use the standard role for the account type.</small>
                       </div>
                     </div>
                   </div>
@@ -178,3 +228,4 @@ function EditUser() {
 }
 
 export default EditUser;
+

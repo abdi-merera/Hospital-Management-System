@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react';
-import styles from './Appointment.module.css';
 import { useNavigate } from "react-router-dom";
 import ErrorDialogueBox from '../MUIDialogueBox/ErrorDialogueBox';
 import { UserContext } from '../../Context/UserContext'
@@ -18,9 +17,22 @@ import { BootstrapDialog, BootstrapDialogTitle } from "../MUIDialogueBox/Boostra
 import DialogContent from '@mui/material/DialogContent';
 import AppointmentForm from '../Forms/AppointmentForm'
 import DoctorAppointmentTable from '../MUITable/DoctorAppointmentTable'
+import { hospitalDepartments } from '../../constants/departments';
+
+const appointmentMainClass = "mt-[50px] min-h-screen w-full pl-[50px]";
+const pageTitleClass = "py-[5px] font-bold text-[#31b372]";
+const slotGridClass = "grid grid-cols-[36%_64%] py-[20px] pl-0 pr-[5px] max-[1000px]:grid-cols-1";
+const calendarDivClass = "rounded-lg !border-0 !align-middle max-[1000px]:hidden";
+const slotCreationDivClass = "pl-[70px] max-[1000px]:pl-[30px] [&_h4]:font-bold [&_h4]:text-[#31b372]";
+const availableSlotsHeaderClass = "[&_h4]:font-bold [&_h4]:text-[#31b372]";
+const slotCardClass = "m-2.5 w-[120px] cursor-pointer border border-[#31b372] py-[5px] text-center hover:scale-[1.05]";
+const createButtonClass = "btn btn-primary float-right btn-rounded py-2 px-4";
+const emptyStateClass = "mt-5 rounded border border-dashed border-[#31b372] bg-[#f6fff9] p-4 text-[#315f45]";
+const allTimeSlots = ["9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM"];
 
 function DoctorAppointment() {
     const navigate = useNavigate();
+    const { currentUser } = useContext(UserContext);
 
     //this tells you which slot was clicked among the "available slots"
     const [clickedTimeSlot, setClickedTimeSlot] = useState('');
@@ -47,6 +59,8 @@ function DoctorAppointment() {
     const handleDoctorChange = (event) => {
         setDoctorSelected(event.target.value);
     };
+
+    const hasOpenSlotToCreate = allTimeSlots.some(slot => !(availableSlots.includes(slot)) && !(bookedSlots.includes(slot)));
 
 
     const [errorDialogueBoxOpen, setErrorDialogueBoxOpen] = useState(false);
@@ -237,22 +251,16 @@ function DoctorAppointment() {
         );
         let doctors = response.data;
         if (doctors.length > 0) {
-            // getAvailableSlot();
-            // window.alert("success add")
-            // setAvailableSlot(response.data.appointments)
-            // console.log("++++",doctors);
-            // doctors.sort(function(a, b){
-            //     return a.zzz - b.id;
-            // });
-            if (!departmentSelected) {
-                setDoctorList(doctors);
+            const currentDoctor = doctors.find((doctor) => doctor.userId?._id === currentUser.userId);
+
+            if (currentDoctor) {
+                setDoctorList([currentDoctor]);
+                if (doctorSelected !== currentDoctor._id) {
+                    setDoctorSelected(currentDoctor._id);
+                }
             }
             else {
-                // setDoctorList([]);
-                let filterdDocs = doctors.filter((doc) => {
-                    return doc.department == departmentSelected;
-                })
-                setDoctorList(filterdDocs);
+                setDoctorList(doctors);
             }
 
         }
@@ -270,21 +278,56 @@ function DoctorAppointment() {
                 }
             }
         );
-        let departments = response.data.departments;
-        if (departments.length > 0) {
-
-            setDepartmentList(departments);
-        }
-        else {
-            // window.alert("error add")
-        }
+        let departments = response.data.departments || [];
+        setDepartmentList([...new Set([...hospitalDepartments, ...departments])]);
 
     }
 
     const getPatients = async () => {
-        const response = await axios.get("http://localhost:3001/patients");
+        const response = await axios.get("http://localhost:3001/patients", {
+            headers: {
+                authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        });
         setPatientList(response.data);
     };
+
+    const handleCreateSlotSubmit = async (event) => {
+        event.preventDefault();
+        const form = document.forms.createSlotForm;
+        let timeSlots = Array.from(form.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(input => input.value);
+
+        if (!(timeSlots.length > 0)) {
+            setErrorList(["Please choose a time slot"])
+            handleErrorDialogueOpen();
+            return;
+        }
+
+        try {
+            let response = await axios.post(`http://localhost:3001/appointments/add`,
+                {
+                    'appDate': getformDate(form.appDate.value),
+                    'timeSlots': timeSlots,
+                },
+                {
+                    headers: {
+                        authorization: `Bearer ${localStorage.getItem("token")}`
+                    }
+                }
+            );
+            if (response.data.message == "success") {
+                getAvailableSlots();
+                getBookedSlots();
+            }
+        }
+        catch (error) {
+            setErrorList(error.response?.data?.errors || ["Could not create appointment slots"])
+            handleErrorDialogueOpen();
+        }
+
+        form.querySelectorAll('input[type="checkbox"]').forEach(input => input.checked = false);
+    }
 
     useEffect(() => {
         getDepartmentList()
@@ -298,37 +341,61 @@ function DoctorAppointment() {
 
 
     return (
-        <Box id={styles.appointmentMain} component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Box className={appointmentMainClass} component="main" sx={{ flexGrow: 1, p: 3 }}>
             <div>
-                <h3 className={styles.pageTitle}> Appointments</h3>
+                <h3 className={pageTitleClass}> Appointments</h3>
             </div>
 
-            <div id={styles.slotGrid}>
-                <div id={styles.calendarDiv}>
+            <div className={slotGridClass}>
+                <div className={calendarDivClass}>
                     <MyCalendar date={date} setDate={setDate} />
                 </div>
-                <div id={styles.slotCreationDiv}>
-                    <h4>Select Date </h4>
-                    <div className='mt-4 row'>
-                        <div className="col-12">
-                            <label for="appDate" className="col-sm-3 col-form-label ">Date: </label>
-                            <input id="appDate" name="appDate" type="date" className="col-form-control col-sm-7"
-                                value={formatDateForDateInput(date)}
-                                onChange={(e) => setDate(getformDate(e.target.value))}
-                            />
+                <div className={slotCreationDivClass}>
+                    <form name='createSlotForm' id="createSlotForm" onSubmit={handleCreateSlotSubmit} >
+                        <h4>Select Date </h4>
+                        <div className='mt-4 row'>
+                            <div className="col-12">
+                                <label htmlFor="appDate" className="col-sm-3 col-form-label ">Date: </label>
+                                <input id="appDate" name="appDate" type="date" className="col-form-control col-sm-7"
+                                    value={formatDateForDateInput(date)}
+                                    onChange={(e) => setDate(getformDate(e.target.value))}
+                                />
+                            </div>
+
+                        </div>
+                        <h4 className="mt-5">Create Available Slots</h4>
+                        <div className='my-4 row'>
+                            <label htmlFor="appTime" className="col-sm-3 col-form-label ">Time slots: </label>
+                            <span className='col-sm-9'>
+                                {allTimeSlots.map((slot) => {
+                                    if (!(availableSlots.includes(slot)) && !(bookedSlots.includes(slot))) {
+                                        return (
+                                            <div className="form-check form-check-inline px-3 py-1" key={slot}>
+                                                <input className="form-check-input" type="checkbox" id={slot} value={slot} />
+                                                <label className="form-check-label" htmlFor={slot}>{slot}</label>
+                                            </div>
+                                        )
+                                    }
+
+                                    return null;
+                                })}
+                                {!hasOpenSlotToCreate && <p className="m-0 text-muted">All slots for this date have already been created or booked.</p>}
+                            </span>
                         </div>
 
-                    </div>
+                        <input type='submit' className={createButtonClass} value='Create' />
+                    </form>
+
                     <div className=' row'>
                         {/* <div className="col-12"> */}
 
                         {/* </div> */}
-                        {availableSlots.length > 0 ? <div className={styles.availableSlotsHeader}> <h4 className="mt-5">Available Slots</h4></div> : <div></div>}
+                        {availableSlots.length > 0 ? <div className={availableSlotsHeaderClass}> <h4 className="mt-5">Available Slots</h4> <p>Click a slot to book appointments</p></div> : <div className={emptyStateClass}>No available slots for this date yet. Choose time slots above and click Create.</div>}
 
                         <div className='d-flex flex-wrap'>
                             {
                                 availableSlots.map(slot => {
-                                    return <div className={styles.slotCard}>{slot}</div>
+                                    return <div onClick={() => slotClicked(slot)} className={slotCardClass} key={slot}>{slot}</div>
                                 })
                             }
                         </div>
@@ -343,7 +410,7 @@ function DoctorAppointment() {
 
 
             {bookedAppointments.length > 0 ?
-                <div className={styles.availableSlotsHeader}>
+                <div className={availableSlotsHeaderClass}>
                     <h4 className="mt-5">
                         Booked Appointments
                     </h4>
@@ -392,3 +459,4 @@ function DoctorAppointment() {
 }
 
 export default DoctorAppointment;
+

@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react';
-import styles from './Appointment.module.css';
 import { useNavigate } from "react-router-dom";
 import ErrorDialogueBox from '../MUIDialogueBox/ErrorDialogueBox';
 import { UserContext } from '../../Context/UserContext'
@@ -18,9 +17,19 @@ import { BootstrapDialog, BootstrapDialogTitle } from "../MUIDialogueBox/Boostra
 import DialogContent from '@mui/material/DialogContent';
 import AppointmentForm from '../Forms/AppointmentForm'
 import AppointmentTable from '../MUITable/AppointmentTable'
+import { hospitalDepartments } from '../../constants/departments';
+
+const appointmentMainClass = "mt-[50px] min-h-screen w-full pl-[50px]";
+const pageTitleClass = "py-[5px] font-bold text-[#31b372]";
+const slotGridClass = "grid grid-cols-[36%_64%] py-[20px] pl-0 pr-[5px] max-[1000px]:grid-cols-1";
+const calendarDivClass = "rounded-lg !border-0 !align-middle max-[1000px]:hidden";
+const slotCreationDivClass = "pl-[70px] max-[1000px]:pl-[30px] [&_h4]:font-bold [&_h4]:text-[#31b372]";
+const availableSlotsHeaderClass = "[&_h4]:font-bold [&_h4]:text-[#31b372]";
+const slotCardClass = "m-2.5 w-[120px] cursor-pointer border border-[#31b372] py-[5px] text-center hover:scale-[1.05]";
 
 function PatientAppointment() {
     const navigate = useNavigate();
+    const { currentUser } = useContext(UserContext);
 
     //this tells you which slot was clicked among the "available slots"
     const [clickedTimeSlot, setClickedTimeSlot] = useState('');
@@ -72,11 +81,19 @@ function PatientAppointment() {
     const addAppointmentFormSubmitted = async (event) => {
         event.preventDefault();
         const form = document.forms.addAppointment;
+        const selectedPatientId = currentUser.userType === "Patient" ? patientList[0]?._id : form.patient.value;
+
+        if (!selectedPatientId) {
+            setErrorList(["Could not find your patient profile. Please contact reception."])
+            handleErrorDialogueOpen();
+            return;
+        }
+
         let reqObj = {
             "appDate": form.appDate.value,
             "appTime": form.appTime.value,
             "doctorId": form.doctor.value,
-            "patientId": form.patient.value
+            "patientId": selectedPatientId
         }
         // console.log("reqObj",reqObj);
 
@@ -278,20 +295,26 @@ function PatientAppointment() {
                 }
             }
         );
-        let departments = response.data.departments;
-        if (departments.length > 0) {
-
-            setDepartmentList(departments);
-        }
-        else {
-            // window.alert("error add")
-        }
+        let departments = response.data.departments || [];
+        setDepartmentList([...new Set([...hospitalDepartments, ...departments])]);
 
     }
 
     const getPatients = async () => {
-        const response = await axios.get("http://localhost:3001/patients");
-        setPatientList(response.data);
+        const response = await axios.get("http://localhost:3001/patients", {
+            headers: {
+                authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        });
+        if (currentUser.userType === "Patient") {
+            setPatientList(response.data.filter((patient) => {
+                const patientUserId = patient.userId?._id || patient.userId;
+                return String(patientUserId) === String(currentUser.userId);
+            }));
+        }
+        else {
+            setPatientList(response.data);
+        }
     };
 
     useEffect(() => {
@@ -306,21 +329,21 @@ function PatientAppointment() {
 
 
     return (
-        <Box id={styles.appointmentMain} component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Box className={appointmentMainClass} component="main" sx={{ flexGrow: 1, p: 3 }}>
             <div>
-                <h3 className={styles.pageTitle}> Appointments</h3>
+                <h3 className={pageTitleClass}> Appointments</h3>
             </div>
 
-            <div id={styles.slotGrid}>
-                <div id={styles.calendarDiv}>
+            <div className={slotGridClass}>
+                <div className={calendarDivClass}>
                     <MyCalendar date={date} setDate={setDate} />
                 </div>
-                <div id={styles.slotCreationDiv}>
+                <div className={slotCreationDivClass}>
                     <h4>Select Date and Doctor</h4>
                     <div className='my-4 row'>
                         <div className='col-12'>
-                            <label for="department" className="col-sm-3 col-form-label ">Department: </label>
-                            <select name="department" id="department" class="col-form-select col-sm-7" aria-label="Default select example" onChange={handleDepartmentChange}>
+                            <label htmlFor="department" className="col-sm-3 col-form-label ">Department: </label>
+                            <select name="department" id="department" className="col-form-select col-sm-7" aria-label="Default select example" onChange={handleDepartmentChange}>
                                 <option selected value=''>All</option>
                                 {
                                     departmentList.map(sp => {
@@ -335,8 +358,8 @@ function PatientAppointment() {
                     <div className='my-4 row'>
 
                         <div className='col-12'>
-                            <label for="doctor" className="col-sm-3 col-form-label ">Doctor: </label>
-                            <select name="doctor" id="doctor" class="col-form-select col-sm-7" aria-label="Default select example" required
+                            <label htmlFor="doctor" className="col-sm-3 col-form-label ">Doctor: </label>
+                            <select name="doctor" id="doctor" className="col-form-select col-sm-7" aria-label="Default select example" required
                                 onChange={handleDoctorChange}
                             >
                                 <option value=''>Choose Doctor</option>
@@ -357,7 +380,7 @@ function PatientAppointment() {
                     </div>
                     <div className='mt-4 row'>
                         <div className="col-12">
-                            <label for="appDate" className="col-sm-3 col-form-label ">Date: </label>
+                            <label htmlFor="appDate" className="col-sm-3 col-form-label ">Date: </label>
                             <input id="appDate" name="appDate" type="date" className="col-form-control col-sm-7"
                                 value={formatDateForDateInput(date)}
                                 onChange={(e) => setDate(getformDate(e.target.value))}
@@ -369,12 +392,12 @@ function PatientAppointment() {
                         {/* <div className="col-12"> */}
 
                         {/* </div> */}
-                        {availableSlots.length > 0 ? <div className={styles.availableSlotsHeader}> <h4 className="mt-5">Available Slots</h4> <p>Click a slot to book appointments</p></div> : <div></div>}
+                        {availableSlots.length > 0 ? <div className={availableSlotsHeaderClass}> <h4 className="mt-5">Available Slots</h4> <p>Click a slot to book appointments</p></div> : <div></div>}
 
                         <div className='d-flex flex-wrap'>
                             {
                                 availableSlots.map(slot => {
-                                    return <div onClick={() => slotClicked(slot)} className={styles.slotCard}>{slot}</div>
+                                    return <div onClick={() => slotClicked(slot)} className={slotCardClass}>{slot}</div>
                                 })
                             }
                         </div>
@@ -389,7 +412,7 @@ function PatientAppointment() {
 
 
             {bookedAppointments.length > 0 ?
-                <div className={styles.availableSlotsHeader}>
+                <div className={availableSlotsHeaderClass}>
                     <h4 className="mt-5">
                         Booked Appointments
                     </h4>
@@ -429,6 +452,7 @@ function PatientAppointment() {
                         appTime={clickedTimeSlot}
                         doctorList={doctorList}
                         doctorSelected={doctorSelected}
+                        patientSelected={currentUser.userType === "Patient" ? patientList[0]?._id : undefined}
                         patientList={patientList}
                         availableSlots={availableSlots} />
                 </DialogContent>
@@ -438,3 +462,4 @@ function PatientAppointment() {
 }
 
 export default PatientAppointment;
+

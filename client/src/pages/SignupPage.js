@@ -178,8 +178,7 @@ function SignupPage() {
             >
               <option value=""></option>
               <option value="Patient">Patient</option>
-              <option value="Doctor">Doctor</option>
-              <option value="Nurse">Nurse</option>
+              <option value="Staff">Staff</option>
             </select>
             <label htmlFor="userType">User Type</label>
           </div>
@@ -191,7 +190,7 @@ function SignupPage() {
             <button id="signUp" type="submit">Sign Up</button>
           </div>
           <div className='text-center'>
-            Already have an account? <NavLink to="/login" exact >Sign In</NavLink>
+            Already have an account? <NavLink to="/login">Sign In</NavLink>
           </div>
 
         </form>

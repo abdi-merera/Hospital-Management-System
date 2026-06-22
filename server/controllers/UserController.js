@@ -1,6 +1,7 @@
 const User = require("../models/user.js");
 const Patient = require("../models/patient.js");
 const Doctor = require("../models/doctor.js");
+const bcrypt = require("bcrypt");
 
 
 const getUsers = async (req, res) => {
@@ -25,7 +26,6 @@ const getUsers = async (req, res) => {
         if (conditions.length === 0) {
             users = await User.find({});
         } else {
-            console.log(conditions);
 
             users = await User.find({
                 $or: conditions
@@ -129,8 +129,7 @@ const saveUser = async (req, res) => {
                                 }
                             }
                         );
-                    }
-                    if (newUser.userType === "Patient") {
+                    } else if (newUser.userType === "Patient") {
                         Patient.create(
                             {
                                 userId: userDetails._id,
@@ -147,6 +146,8 @@ const saveUser = async (req, res) => {
                                 }
                             }
                         );
+                    } else {
+                        res.status(201).json({ message: "success" });
                     }
                 }
             }
@@ -166,7 +167,11 @@ const updateUser = async (req, res) => {
     }
     else {
         try {
-            const updateduser = await User.updateOne({ _id: req.params.id }, { $set: req.body });
+            const update = { ...req.body };
+            if (update.password) {
+                update.password = await bcrypt.hash(update.password, 10);
+            }
+            await User.updateOne({ _id: req.params.id }, { $set: update });
             res.status(201).json({ message: 'success' });
         } catch (error) {
             res.status(400).json({ message: 'error', errors: [error.message] });

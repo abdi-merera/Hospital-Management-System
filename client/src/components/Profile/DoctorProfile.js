@@ -5,6 +5,7 @@ import ErrorDialogueBox from '../MUIDialogueBox/ErrorDialogueBox';
 import axios from "axios";
 import Box from '@mui/material/Box';
 import { UserContext } from '../../Context/UserContext'
+import { hospitalDepartments } from '../../constants/departments';
 
 function DoctorProfile() {
     const navigate = useNavigate();
@@ -160,9 +161,10 @@ function DoctorProfile() {
                                             <div className="form-group">
                                                 <label>Department</label>
                                                 <select disabled name="department" className="form-select" value={department} onChange={(event) => setDepartment(event.target.value)}>
-                                                    <option value="Cardiology">Cardiology</option>
-                                                    <option value="Gynecology">Gynecology</option>
-                                                    <option value="Hematology">Hematology</option>
+                                                    <option value="">Choose Department</option>
+                                                    {hospitalDepartments.map((departmentName) => (
+                                                        <option key={departmentName} value={departmentName}>{departmentName}</option>
+                                                    ))}
                                                 </select>
                                             </div>
                                         </div>

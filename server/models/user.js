@@ -40,8 +40,12 @@ const UserSchema = new Schema({
     userType: {
         type: String,
         required: true,
-        enum: ['Admin', 'Patient', 'Doctor'],
-    }
+        enum: ['Admin', 'Staff', 'Patient'],
+    },
+    roles: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role"
+    }]
 },
     {
         timestamps: true

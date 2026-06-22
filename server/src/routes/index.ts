@@ -1,0 +1,41 @@
+import { Router } from 'express';
+import authRoutes from '../modules/auth/auth.routes';
+import dashboardRoutes from '../modules/reports/dashboard.routes';
+import userRoutes from '../modules/users/user.routes';
+import profileRoutes from '../modules/users/profile.routes';
+import patientRoutes from '../modules/patients/patient.routes';
+import doctorRoutes from '../modules/staff/doctor.routes';
+import appointmentRoutes from '../modules/appointments/appointment.routes';
+import medicineRoutes from '../modules/pharmacy/medicine.routes';
+import prescriptionRoutes from '../modules/emr/prescription.routes';
+import emrRoutes from '../modules/emr/emr.routes';
+import invoiceRoutes from '../modules/billing/invoice.routes';
+import rolesPermissionsRoutes from '../modules/roles-permissions/roles-permissions.routes';
+import encounterRoutes from '../modules/encounters/encounter.routes';
+import triageRoutes from '../modules/triage/triage.routes';
+import admissionRoutes from '../modules/admissions/admission.routes';
+import wardRoutes from '../modules/wards/ward.routes';
+import auditLogRoutes from '../modules/audit-logs/audit-log.routes';
+
+const router = Router();
+
+router.use(authRoutes);
+router.use(dashboardRoutes);
+router.use(userRoutes);
+router.use(profileRoutes);
+router.use(patientRoutes);
+router.use(doctorRoutes);
+router.use(appointmentRoutes);
+router.use(encounterRoutes);
+router.use(triageRoutes);
+router.use(admissionRoutes);
+router.use(wardRoutes);
+router.use(medicineRoutes);
+router.use(prescriptionRoutes);
+router.use(emrRoutes);
+router.use(invoiceRoutes);
+router.use(auditLogRoutes);
+router.use(rolesPermissionsRoutes);
+router.use('/api/paypal', require('../../routes/api/paypal'));
+
+export default router;

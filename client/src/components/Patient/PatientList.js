@@ -1,13 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import axios from "axios";
 import ErrorDialogueBox from '../MUIDialogueBox/ErrorDialogueBox';
 import Box from '@mui/material/Box';
 import PatientTable from '../MUITable/PatientTable';
+import { UserContext } from '../../Context/UserContext';
 
 function PatientList() {
+    const { currentUser } = useContext(UserContext);
     const params = new URLSearchParams(window.location.search);
-    const name = params.get('name');
+    const phone = params.get('phone');
+    const permissions = currentUser?.permissions || [];
+    const canCreatePatient = permissions.includes('create_patient');
+    const canUpdatePatient = permissions.includes('update_patient');
+    const canDeletePatient = permissions.includes('delete_patient');
 
     const [patients, setPatient] = useState([]);
 
@@ -29,7 +35,10 @@ function PatientList() {
     const getPatients = async () => {
         const response = await axios.get("http://localhost:3001/patients", {
             params: {
-                name: name
+                name: phone
+            },
+            headers: {
+                authorization: `Bearer ${localStorage.getItem("token")}`
             }
         });
         setPatient(response.data);
@@ -37,7 +46,11 @@ function PatientList() {
 
     const deletePatient = async (id) => {
         try {
-            await axios.delete(`http://localhost:3001/patients/${id}`);
+            await axios.delete(`http://localhost:3001/patients/${id}`, {
+                headers: {
+                    authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
             getPatients();
         } catch (error) {
             setErrorList(error);
@@ -55,19 +68,21 @@ function PatientList() {
                         <div className="col-sm-4 col-3">
                             <h4 className="page-title">Patient</h4>
                         </div>
-                        <div className="col-sm-8 col-9 text-right m-b-20">
-                            <Link to="/patients/add" className="btn btn-primary float-right btn-rounded">
-                                <i className="fa fa-plus"></i> Add Patient
-                            </Link>
-                        </div>
+                        {canCreatePatient && (
+                            <div className="col-sm-8 col-9 text-right m-b-20">
+                                <Link to="/patients/add" className="btn btn-primary float-right btn-rounded">
+                                    <i className="fa fa-plus"></i> Add Patient
+                                </Link>
+                            </div>
+                        )}
                     </div>
                     <form action="/patients" name="userFilter" >
                         <div className="row filter-row">
 
                             <div className="col-sm-4 col-md-4">
                                 <div className="form-floating">
-                                    <input type="text" name="name" className="form-control" placeholder='Patient Name' />
-                                    <label className="focus-label">Patient Name</label>
+                                    <input type="text" name="phone" className="form-control" placeholder='Phone Number' defaultValue={phone || ''} />
+                                    <label className="focus-label">Phone Number</label>
                                 </div>
                             </div>
 
@@ -76,7 +91,12 @@ function PatientList() {
                             </div>
                         </div>
                     </form>
-                    <PatientTable patientList={patients} deletePatient={deletePatient} />
+                    <PatientTable
+                        patientList={patients}
+                        deletePatient={deletePatient}
+                        canUpdatePatient={canUpdatePatient}
+                        canDeletePatient={canDeletePatient}
+                    />
                     {/* <div className="row">
                         <div className="col-md-12">
                             <div className="table-responsive">

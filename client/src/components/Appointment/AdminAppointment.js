@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useState } from 'react';
-import styles from './Appointment.module.css';
 import { useNavigate } from "react-router-dom";
 import ErrorDialogueBox from '../MUIDialogueBox/ErrorDialogueBox';
 import { UserContext } from '../../Context/UserContext'
@@ -18,9 +17,21 @@ import { BootstrapDialog, BootstrapDialogTitle } from "../MUIDialogueBox/Boostra
 import DialogContent from '@mui/material/DialogContent';
 import AppointmentForm from '../Forms/AppointmentForm'
 import AppointmentTable from '../MUITable/AppointmentTable'
+import { hospitalDepartments } from '../../constants/departments';
+
+const appointmentMainClass = "mt-[50px] min-h-screen w-full pl-[50px]";
+const pageTitleClass = "py-[5px] font-bold text-[#31b372]";
+const slotGridClass = "grid grid-cols-[36%_64%] py-[20px] pl-0 pr-[5px] max-[1000px]:grid-cols-1";
+const calendarDivClass = "rounded-lg !border-0 !align-middle max-[1000px]:hidden";
+const slotCreationDivClass = "pl-[70px] max-[1000px]:pl-[30px] [&_h4]:font-bold [&_h4]:text-[#31b372]";
+const availableSlotsHeaderClass = "[&_h4]:font-bold [&_h4]:text-[#31b372]";
+const slotCardClass = "m-2.5 w-[120px] cursor-pointer border border-[#31b372] py-[5px] text-center hover:scale-[1.05]";
+const helperTextClass = "mt-3 text-sm text-[#666]";
 
 function AdminAppointment() {
     const navigate = useNavigate();
+    const { currentUser } = useContext(UserContext);
+    const canCreateSlots = currentUser.userType === 'Admin' || currentUser.userType === 'Staff';
 
     //this tells you which slot was clicked among the "available slots"
     const [clickedTimeSlot, setClickedTimeSlot] = useState('');
@@ -268,19 +279,17 @@ function AdminAppointment() {
                 }
             }
         );
-        let departments = response.data.departments;
-        if (departments.length > 0) {
-
-            setDepartmentList(departments);
-        }
-        else {
-            // window.alert("error add")
-        }
+        let departments = response.data.departments || [];
+        setDepartmentList([...new Set([...hospitalDepartments, ...departments])]);
 
     }
 
     const getPatients = async () => {
-        const response = await axios.get("http://localhost:3001/patients");
+        const response = await axios.get("http://localhost:3001/patients", {
+            headers: {
+                authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        });
         setPatientList(response.data);
     };
 
@@ -295,6 +304,11 @@ function AdminAppointment() {
 
     const handleCreateSlotSubmit = async (event) => {
         event.preventDefault();
+        if (!canCreateSlots) {
+            getAvailableSlots();
+            getBookedSlots();
+            return;
+        }
         const form = document.forms.createSlotForm;
         let timeSlots = Array.from(form.querySelectorAll('input[type="checkbox"]:checked'))
             .map(input => input.value);
@@ -339,22 +353,22 @@ function AdminAppointment() {
 
 
     return (
-        <Box id={styles.appointmentMain} component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Box className={appointmentMainClass} component="main" sx={{ flexGrow: 1, p: 3 }}>
             <div>
-                <h3 className={styles.pageTitle}> Appointments</h3>
+                <h3 className={pageTitleClass}> Appointments</h3>
             </div>
 
-            <div id={styles.slotGrid}>
-                <div id={styles.calendarDiv}>
+            <div className={slotGridClass}>
+                <div className={calendarDivClass}>
                     <MyCalendar date={date} setDate={setDate} />
                 </div>
-                <div id={styles.slotCreationDiv}>
+                <div className={slotCreationDivClass}>
                     <form name='createSlotForm' id="createSlotForm" onSubmit={handleCreateSlotSubmit} >
-                        <h4>Choose Doctor and Date</h4>
+                        <h4>{canCreateSlots ? 'Choose Doctor and Date' : 'Select Date and Doctor'}</h4>
                         <div className='my-4 row'>
                             <div className='col-12'>
-                                <label for="department" className="col-sm-3 col-form-label ">Department: </label>
-                                <select name="department" id="department" class="col-form-select col-sm-7" aria-label="Default select example" onChange={handleDepartmentChange}>
+                                <label htmlFor="department" className="col-sm-3 col-form-label ">Department: </label>
+                                <select name="department" id="department" className="col-form-select col-sm-7" aria-label="Default select example" onChange={handleDepartmentChange}>
                                     <option selected value=''>All</option>
                                     {
                                         departmentList.map(sp => {
@@ -369,8 +383,8 @@ function AdminAppointment() {
                         <div className='my-4 row'>
 
                             <div className='col-12'>
-                                <label for="doctor" className="col-sm-3 col-form-label ">Doctor: </label>
-                                <select name="doctor" id="doctor" class="col-form-select col-sm-7" aria-label="Default select example" required
+                                <label htmlFor="doctor" className="col-sm-3 col-form-label ">Doctor: </label>
+                                <select name="doctor" id="doctor" className="col-form-select col-sm-7" aria-label="Default select example" required
                                     onChange={handleDoctorChange}
                                 >
                                     <option value=''>Choose Doctor</option>
@@ -391,7 +405,7 @@ function AdminAppointment() {
                         </div>
                         <div className='my-4 row'>
                             <div className="col-12">
-                                <label for="appDate" className="col-sm-3 col-form-label ">Date: </label>
+                                <label htmlFor="appDate" className="col-sm-3 col-form-label ">Date: </label>
                                 <input id="appDate" name="appDate" type="date" className="col-form-control col-sm-7"
                                     value={formatDateForDateInput(date)}
                                     onChange={(e) => setDate(getformDate(e.target.value))}
@@ -399,11 +413,32 @@ function AdminAppointment() {
                             </div>
 
                         </div>
+                        {!canCreateSlots && (
+                            <div className='my-4 row'>
+                                <div className="col-12">
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary btn-rounded py-2 px-4"
+                                        disabled={!doctorSelected}
+                                        onClick={() => {
+                                            getAvailableSlots();
+                                            getBookedSlots();
+                                        }}
+                                    >
+                                        Find Available Slots
+                                    </button>
+                                    <p className={helperTextClass}>
+                                        Choose a doctor and date, then click an available time slot below to book a patient.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {canCreateSlots && <>
                         <h4>Create Slots</h4>
                         <div className='my-4 row'>
                             {/* <div className="col-12"> */}
-                            <label for="appTime" className="col-sm-3 col-form-label ">Time slots: </label>
-                            {/* <select name="appTime" id="appTime" class="col-form-select col-sm-6" aria-label="Default select example" required>
+                            <label htmlFor="appTime" className="col-sm-3 col-form-label ">Time slots: </label>
+                            {/* <select name="appTime" id="appTime" className="col-form-select col-sm-6" aria-label="Default select example" required>
                                     <option selected value=''>Click to select slot</option>
                                     <option value="9:00 AM">9 AM</option>
                                     <option value="9:30 AM">9:30 AM</option>
@@ -422,12 +457,13 @@ function AdminAppointment() {
                                 {["9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM"].map((slot) => {
                                     if (!(availableSlots.includes(slot)) && !(bookedSlots.includes(slot))) {
                                         return (
-                                            <div class="form-check form-check-inline px-3 py-1">
-                                                <input class="form-check-input" type="checkbox" id={slot} value={slot} />
-                                                <label class="form-check-label" for={slot}>{slot}</label>
+                                            <div className="form-check form-check-inline px-3 py-1" key={slot}>
+                                                <input className="form-check-input" type="checkbox" id={slot} value={slot} />
+                                                <label className="form-check-label" htmlFor={slot}>{slot}</label>
                                             </div>
                                         )
                                     }
+                                    return null;
 
                                 })}
                             </span>
@@ -435,24 +471,27 @@ function AdminAppointment() {
                         </div>
 
                         <input type='submit' className='btn btn-primary float-right btn-rounded py-2 px-4' value='Create' />
+                        </>}
                     </form>
 
                 </div>
 
             </div>
-            {availableSlots.length > 0 ? <div className={styles.availableSlotsHeader}> <h4 className="mt-5">Available Slots</h4> <p>Click a slot to book appointments</p></div> : <div></div>}
+            {doctorSelected && availableSlots.length > 0 ? <div className={availableSlotsHeaderClass}> <h4 className="mt-5">Available Slots</h4> <p>Click a slot to book appointments</p></div> : <div></div>}
+            {!doctorSelected && !canCreateSlots ? <div className={availableSlotsHeaderClass}><h4 className="mt-5">Available Slots</h4><p>Choose a doctor to see available appointment times.</p></div> : <div></div>}
+            {doctorSelected && availableSlots.length === 0 ? <div className={availableSlotsHeaderClass}><h4 className="mt-5">Available Slots</h4><p>No available slots found for this doctor and date.</p></div> : <div></div>}
 
             <div className='d-flex flex-wrap'>
                 {
                     availableSlots.map(slot => {
-                        return <div onClick={() => slotClicked(slot)} className={styles.slotCard}>{slot}</div>
+                        return <div onClick={() => slotClicked(slot)} className={slotCardClass}>{slot}</div>
                     })
                 }
             </div>
 
 
             {bookedAppointments.length > 0 ?
-                <div className={styles.availableSlotsHeader}>
+                <div className={availableSlotsHeaderClass}>
                     <h4 className="mt-5">
                         Booked Appointments
                     </h4>
@@ -501,3 +540,4 @@ function AdminAppointment() {
 }
 
 export default AdminAppointment;
+

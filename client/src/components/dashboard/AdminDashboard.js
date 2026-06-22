@@ -1,5 +1,4 @@
 
-import styles from './Dashboard.module.css';
 import { React, useState, useEffect, useContext } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -8,6 +7,17 @@ import { NavLink } from 'react-router-dom';
 import moment from "moment"
 import { UserContext } from '../../Context/UserContext'
 
+const dashboardBodyClass = "min-h-screen w-full bg-[#efececa7]";
+const welcomeBannerClass = "mt-[70px] h-[300px] w-full rounded-b-[22px] bg-[url('/public/images/welcomeBanner.png')] bg-cover bg-no-repeat p-[50px] max-[768px]:h-[320px] max-[768px]:p-5";
+const horizontalLineClass = "w-[30%] border-t border-white pb-[30px]";
+const statGridClass = "mt-5 grid grid-cols-4 gap-2.5 p-5 max-[1000px]:grid-cols-2 max-[1000px]:p-0 max-[1000px]:pb-5 max-[768px]:grid-cols-1";
+const statCardClass = "mb-5 bg-white p-0 shadow-[1px_1px_1px_1px_rgba(0,0,0,0.1)] hover:scale-[1.02] max-[1000px]:m-0";
+const dashWidgetClass = "relative rounded p-5";
+const dashWidgetInfoClass = "text-right";
+const dashWidgetInfoH3Class = "mb-2 text-2xl font-medium";
+const iconBaseClass = "float-left block h-[65px] w-[65px] rounded-full text-center text-[40px] leading-[65px] text-white";
+const widgetTitleBaseClass = "rounded px-2.5 py-[5px] text-[13px] text-white [&_i]:ml-[5px] [&_i]:inline-block [&_i]:h-4 [&_i]:w-4 [&_i]:rounded-full [&_i]:bg-white [&_i]:text-center [&_i]:text-[9px] [&_i]:leading-4 [&_i]:text-[#666666]";
+const appointmentTableTdClass = "min-w-[200px]";
 
 export default function AdminDashboard() {
 
@@ -88,12 +98,10 @@ export default function AdminDashboard() {
 	const getdoctors = async () => {
 		const response = await axios.get("http://localhost:3001/doctors");
 		setdoctor(response.data);
+		setDoctorCount(response.data.length || 0);
 	};
 
 	useEffect(() => {
-		//setting count of Doctors on dashboard
-		getUserCountByRole("Doctor");
-
 		//setting count of Patients on dashboard
 		getUserCountByRole("Patient");
 		getAppointmentCount()
@@ -102,14 +110,14 @@ export default function AdminDashboard() {
 	}, []);
 
 	return (
-		<Box className={styles.dashboardBody} component="main" sx={{ flexGrow: 1, p: 3 }}>
-			<div id={styles.welcomeBanner}>
+		<Box className={dashboardBodyClass} component="main" sx={{ flexGrow: 1, p: 3 }}>
+			<div className={welcomeBannerClass}>
 				<div className='text-white'>
 					<h3 >Welcome!</h3>
 					<br/>
 					<h4>{currentUser.firstName} {currentUser.lastName}</h4>
 					<br/>
-					<div class={styles.horizontalLine}></div>
+					<div className={horizontalLineClass}></div>
 					At Green Hills, we believe that every patient deserves the highest quality care possible. 
 					<br/>
 					Our commitment to excellence in healthcare is matched only by our compassion for those we serve.
@@ -117,40 +125,40 @@ export default function AdminDashboard() {
 				</div>
 
 			</div>
-			<div className={styles.statCardGrid}>
-				<div className={["", styles.statCard].join(" ")}>
-					<div className={styles.dashWidget}>
-						<span className={styles.dashWidgetBg1}><i className="fa fa-stethoscope" aria-hidden="true"></i></span>
-						<div className={[" ", styles.dashWidgetInfo].join(" ")} >
-							<h3 className={styles.dashWidgetInfoH3}>{doctorCount}</h3>
-							<span className={styles.widgetTitle1}>Doctors <i class="fa fa-check" aria-hidden="true"></i></span>
+			<div className={statGridClass}>
+				<div className={statCardClass}>
+					<div className={dashWidgetClass}>
+						<span className={`${iconBaseClass} bg-[#009efb]`}><i className="fa fa-stethoscope" aria-hidden="true"></i></span>
+						<div className={dashWidgetInfoClass} >
+							<h3 className={dashWidgetInfoH3Class}>{doctorCount}</h3>
+							<span className={`${widgetTitleBaseClass} bg-[#009efb]`}>Doctors <i className="fa fa-check" aria-hidden="true"></i></span>
 						</div>
 					</div>
 				</div>
-				<div className={["", styles.statCard].join(" ")}>
-					<div className={styles.dashWidget}>
-						<span className={styles.dashWidgetBg2}><i className="fa fa-user-o" aria-hidden="true"></i></span>
-						<div className={[" ", styles.dashWidgetInfo].join(" ")} >
-							<h3 className={styles.dashWidgetInfoH3}>{patientCount}</h3>
-							<span className={styles.widgetTitle2}>Patients <i class="fa fa-check" aria-hidden="true"></i></span>
+				<div className={statCardClass}>
+					<div className={dashWidgetClass}>
+						<span className={`${iconBaseClass} bg-[#55ce63]`}><i className="fa fa-user-o" aria-hidden="true"></i></span>
+						<div className={dashWidgetInfoClass} >
+							<h3 className={dashWidgetInfoH3Class}>{patientCount}</h3>
+							<span className={`${widgetTitleBaseClass} bg-[#55ce63]`}>Patients <i className="fa fa-check" aria-hidden="true"></i></span>
 						</div>
 					</div>
 				</div>
-				<div className={["", styles.statCard].join(" ")}>
-					<div className={styles.dashWidget}>
-						<span className={styles.dashWidgetBg3}><i className=" fa fa-calendar" aria-hidden="true"></i></span>
-						<div className={[" ", styles.dashWidgetInfo].join(" ")} >
-							<h3 className={styles.dashWidgetInfoH3}>{appsTodayCount}</h3>
-							<span className={styles.widgetTitle3}>Appointments Today <i class="fa fa-check" aria-hidden="true"></i></span>
+				<div className={statCardClass}>
+					<div className={dashWidgetClass}>
+						<span className={`${iconBaseClass} bg-[#7a92a3]`}><i className=" fa fa-calendar" aria-hidden="true"></i></span>
+						<div className={dashWidgetInfoClass} >
+							<h3 className={dashWidgetInfoH3Class}>{appsTodayCount}</h3>
+							<span className={`${widgetTitleBaseClass} bg-[#7a92a3]`}>Appointments Today <i className="fa fa-check" aria-hidden="true"></i></span>
 						</div>
 					</div>
 				</div>
-				<div className={["", styles.statCard].join(" ")}>
-					<div className={styles.dashWidget}>
-						<span className={styles.dashWidgetBg4}><i className="fa fa-heartbeat" aria-hidden="true"></i></span>
-						<div className={[" ", styles.dashWidgetInfo].join(" ")} >
-							<h3 className={styles.dashWidgetInfoH3}>{pendingAppsTodayCount}</h3>
-							<span className={styles.widgetTitle4}>Pending Appointments <i class="fa fa-check" aria-hidden="true"></i></span>
+				<div className={statCardClass}>
+					<div className={dashWidgetClass}>
+						<span className={`${iconBaseClass} bg-[#ffbc35]`}><i className="fa fa-heartbeat" aria-hidden="true"></i></span>
+						<div className={dashWidgetInfoClass} >
+							<h3 className={dashWidgetInfoH3Class}>{pendingAppsTodayCount}</h3>
+							<span className={`${widgetTitleBaseClass} bg-[#ffbc35]`}>Pending Appointments <i className="fa fa-check" aria-hidden="true"></i></span>
 						</div>
 					</div>
 				</div>
@@ -177,7 +185,7 @@ export default function AdminDashboard() {
 										{bookedAppointments.map((apt) => {
 											return (
 												<tr>
-													<td className={styles.appointmentTableTd}>
+													<td className={appointmentTableTdClass}>
 														<a className="avatar" href="">{apt?.patientId?.userId?.firstName?.charAt(0)}</a>
 														<h2 className='ps-3'><a href="">{apt?.patientId?.userId?.firstName} {apt?.patientId?.userId?.lastName} <span>{apt?.patientId?.address}</span></a></h2>
 													</td>
@@ -186,11 +194,11 @@ export default function AdminDashboard() {
 														<p>Dr. {apt?.doctorId?.userId?.firstName} {apt?.doctorId?.userId?.lastName}</p>
 													</td>
 													<td>
-														<h5 class="time-title p-0">Timing</h5>
+														<h5 className="time-title p-0">Timing</h5>
 														<p>{apt?.appointmentTime}</p>
 													</td>
-													{/* <td class="text-right">
-														<a href="" class="btn btn-outline-primary take-btn">Take up</a>
+													{/* <td className="text-right">
+														<a href="" className="btn btn-outline-primary take-btn">Take up</a>
 													</td> */}
 												</tr>
 											)
@@ -209,23 +217,23 @@ export default function AdminDashboard() {
 						</div>
 					</div>
 				</div>
-				<div class="col-12 col-lg-4 col-xl-4">
-					<div class="card member-panel">
-						<div class="card-header bg-white">
-							<h4 class="card-title mb-0">Doctors</h4>
+				<div className="col-12 col-lg-4 col-xl-4">
+					<div className="card member-panel">
+						<div className="card-header bg-white">
+							<h4 className="card-title mb-0">Doctors</h4>
 						</div>
-						<div class="card-body">
-							<ul class="contact-list">
+						<div className="card-body">
+							<ul className="contact-list">
 								{doctors && doctors.map((doc) => {
 									return (
 										<li>
-											<div class="contact-cont">
-												<div class="float-left user-img m-r-10">
-													{/* <a href="profile.html" title="John Doe"><span class="status online"></span></a> */}
+											<div className="contact-cont">
+												<div className="float-left user-img m-r-10">
+													{/* <a href="profile.html" title="John Doe"><span className="status online"></span></a> */}
 												</div>
-												<div class="contact-info">
-													<span class="contact-name text-ellipsis">{doc.userId?.firstName} {doc.userId?.lastName}</span>
-													<span class="contact-date">{doc.department} </span>
+												<div className="contact-info">
+													<span className="contact-name text-ellipsis">{doc.userId?.firstName} {doc.userId?.lastName}</span>
+													<span className="contact-date">{doc.department} </span>
 												</div>
 											</div>
 										</li>
@@ -235,7 +243,7 @@ export default function AdminDashboard() {
 
 							</ul>
 						</div>
-						<div class="card-footer text-center bg-white">
+						<div className="card-footer text-center bg-white">
 							<NavLink to="/doctors" className="text-muted">View all Doctors</NavLink>
 						</div>
 					</div>
@@ -244,3 +252,4 @@ export default function AdminDashboard() {
 		</Box>
 	);
 }
+

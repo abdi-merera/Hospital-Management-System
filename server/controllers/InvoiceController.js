@@ -39,7 +39,7 @@ const createInvoiceJSON = (prescription) => {
     };
 
 
-    for (item of prescription.prescribedMed) {
+    for (const item of prescription.prescribedMed) {
         invoice.items[invoice.items.length] = {
             item: item.medicineId.name,
             dosage: item.dosage,
@@ -62,41 +62,33 @@ const createInvoiceJSON = (prescription) => {
 }
 
 async function getInvoice(req, res) {
-    const prescriptionId = req.params.id;
-    const prescription = await Prescription.findById(prescriptionId)
-        .populate({
-            path: 'prescribedMed.medicineId',
-        }).populate({
-            path: 'appointmentId',
-            populate: [
-                {
-                    path: 'patientId',
-                    populate: {
-                        path: 'userId',
-                    }
-                },
-                {
-                    path: 'doctorId',
-                    populate: {
-                        path: 'userId'
-                    }
-                }
-            ]
-        });
-    const filePath = `./public/invoice/medical_invoice_${prescriptionId}.pdf`;
-    const invoiceJson = createInvoiceJSON(prescription)
+    try {
+        const prescriptionId = req.params.id;
+        const prescription = await Prescription.findById(prescriptionId)
+            .populate({ path: 'prescribedMed.medicineId' })
+            .populate({
+                path: 'appointmentId',
+                populate: [
+                    { path: 'patientId', populate: { path: 'userId' } },
+                    { path: 'doctorId', populate: { path: 'userId' } }
+                ]
+            });
 
-    // createInvoice(invoiceJson, filePath, prescriptionId);
-    const generatePdfPromise = new Promise((resolve, reject) => {
-        createInvoice(invoiceJson, filePath, prescriptionId, () => {
-            resolve();
-        });
-    });
-    await generatePdfPromise;
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=medical_invoice_${prescriptionId}.pdf`);
-    fs.createReadStream(filePath).pipe(res);
+        if (!prescription) {
+            return res.status(404).json({ message: 'Prescription not found' });
+        }
 
+        const filePath = `./public/invoice/medical_invoice_${prescriptionId}.pdf`;
+        const invoiceJson = createInvoiceJSON(prescription);
+        await new Promise((resolve, reject) => {
+            createInvoice(invoiceJson, filePath, prescriptionId, resolve);
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=medical_invoice_${prescriptionId}.pdf`);
+        fs.createReadStream(filePath).pipe(res);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 }
 
 function createInvoice(invoice, path, prescriptionId, callback) {

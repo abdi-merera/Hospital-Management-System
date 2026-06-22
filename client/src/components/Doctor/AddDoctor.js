@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
 import ErrorDialogueBox from '../MUIDialogueBox/ErrorDialogueBox';
 import Box from '@mui/material/Box';
+import { hospitalDepartments } from '../../constants/departments';
 
 function Adddoctor() {
   const navigate = useNavigate();
@@ -142,9 +143,10 @@ function Adddoctor() {
                       <div className="form-group">
                         <label>Department</label>
                         <select name="department" className="form-select" value={department} onChange={(event) => setDepartment(event.target.value)}>
-                          <option value="Cardiology">Cardiology</option>
-                          <option value="Gynecology">Gynecology</option>
-                          <option value="Hematology">Hematology</option>
+                          <option value="">Choose Department</option>
+                          {hospitalDepartments.map((departmentName) => (
+                            <option key={departmentName} value={departmentName}>{departmentName}</option>
+                          ))}
                         </select>
                       </div>
                     </div>

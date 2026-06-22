@@ -11,12 +11,14 @@ function EditPatient() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
-  const [address, setAddress] = useState('');
+  const [region, setRegion] = useState('');
+  const [city, setCity] = useState('');
+  const [woreda, setWoreda] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
-  const [dob, setDOB] = useState('');
+  const [age, setAge] = useState('');
   const [userId, setUserId] = useState('');
   const [passwordMatchDisplay, setPasswordMatchDisplay] = useState('none');
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
@@ -37,7 +39,11 @@ function EditPatient() {
   }, []);
 
   const getPatientById = async () => {
-    const response = await axios.get(`http://localhost:3001/patients/${id}`);
+    const response = await axios.get(`http://localhost:3001/patients/${id}`, {
+      headers: {
+        authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    });
     //console.log(response);
     setFirstName(response.data.userId.firstName);
     setLastName(response.data.userId.lastName);
@@ -46,10 +52,13 @@ function EditPatient() {
     setPassword(response.data.userId.password);
     setConfirmPassword(response.data.userId.password);
     setPhone(response.data.phone);
-    setAddress(response.data.address);
+    const addressParts = (response.data.address || '').split(',').map((part) => part.trim());
+    setRegion(response.data.region || addressParts[0] || '');
+    setCity(response.data.city || addressParts[1] || '');
+    setWoreda(response.data.woreda || addressParts[2] || '');
     setUserId(response.data.userId._id);
     setGender(response.data.gender);
-    setDOB(response.data.dob);
+    setAge(response.data.age || '');
   };
 
   const updatePatient = async (e) => {
@@ -63,10 +72,16 @@ function EditPatient() {
         phone,
         password,
         confirmPassword,
-        address,
+        region,
+        city,
+        woreda,
         gender,
-        dob,
+        age,
         userId
+      }, {
+        headers: {
+          authorization: `Bearer ${localStorage.getItem("token")}`
+        }
       });
       navigate("/patients");
     } catch (error) {
@@ -151,8 +166,20 @@ function EditPatient() {
                     </div>
                     <div className="col-sm-6">
                       <div className="form-group">
-                        <label>Address </label>
-                        <input name="address" className="form-control" type="text" value={address} onChange={(event) => setAddress(event.target.value)} />
+                        <label>Region</label>
+                        <input name="region" className="form-control" type="text" value={region} onChange={(event) => setRegion(event.target.value)} />
+                      </div>
+                    </div>
+                    <div className="col-sm-6">
+                      <div className="form-group">
+                        <label>City</label>
+                        <input name="city" className="form-control" type="text" value={city} onChange={(event) => setCity(event.target.value)} />
+                      </div>
+                    </div>
+                    <div className="col-sm-6">
+                      <div className="form-group">
+                        <label>Woreda</label>
+                        <input name="woreda" className="form-control" type="text" value={woreda} onChange={(event) => setWoreda(event.target.value)} />
                       </div>
                     </div>
                     <div className="col-sm-6">
@@ -166,8 +193,8 @@ function EditPatient() {
                     </div>
                     <div className="col-sm-6">
                       <div className="form-group">
-                        <label>Date of Birth </label>
-                        <input name="dob" className="form-control" type="date" value={dob} onChange={(event) => setDOB(event.target.value)} />
+                        <label>Age</label>
+                        <input name="age" className="form-control" type="number" min="0" value={age} onChange={(event) => setAge(event.target.value)} />
                       </div>
                     </div>
                   </div>

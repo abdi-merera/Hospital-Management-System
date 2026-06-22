@@ -18,7 +18,7 @@ function PatientProfile() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
-  const [dob, setDOB] = useState('');
+  const [age, setAge] = useState('');
   const [userId, setUserId] = useState('');
   const [passwordMatchDisplay, setPasswordMatchDisplay] = useState('none');
   const [patientId, setPatientId] = useState('');
@@ -54,7 +54,7 @@ function PatientProfile() {
     setAddress(response.data.address);
     setUserId(response.data.userId._id);
     setGender(response.data.gender);
-    setDOB(response.data.dob);
+    setAge(response.data.age || '');
   };
 
   const updatePatient = async (e) => {
@@ -70,8 +70,12 @@ function PatientProfile() {
         confirmPassword,
         address,
         gender,
-        dob,
+        age,
         userId
+      }, {
+        headers: {
+          authorization: `Bearer ${localStorage.getItem("token")}`
+        }
       });
       navigate("/profile");
     } catch (error) {
@@ -171,8 +175,8 @@ function PatientProfile() {
                     </div>
                     <div className="col-sm-6">
                       <div className="form-group">
-                        <label>Date of Birth </label>
-                        <input name="dob" className="form-control" type="date" value={dob} onChange={(event) => setDOB(event.target.value)} />
+                        <label>Age</label>
+                        <input name="age" className="form-control" type="number" min="0" value={age} onChange={(event) => setAge(event.target.value)} />
                       </div>
                     </div>
                   </div>

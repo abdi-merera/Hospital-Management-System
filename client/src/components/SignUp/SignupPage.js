@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import styles from './SignUp.module.css';
 import { NavLink } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
 import ErrorDialogueBox from '../MUIDialogueBox/ErrorDialogueBox';
@@ -82,27 +81,27 @@ function SignupPage() {
   }, [password, confirmPassword])
 
   return (
-    <div id={styles.signUpBody}>
+    <div className="grid h-screen w-full grid-cols-[45%_55%] items-center font-proxima max-[1000px]:grid-cols-[0%_100%]">
 
-      <div id={styles.signUpBG}>
-        <div className={styles.greenLayer}>
+      <div className="bg-[url('/public/images/signup-background.png')] bg-cover bg-no-repeat">
+        <div className="h-screen bg-[rgba(126,211,165,0.44)]">
 
         </div>
       </div>
       <div>
-        <h2>Create An Account</h2>
-        <form id={styles.signUpform} name='signUpform' onSubmit={handleSubmit}>
+        <h2 className="text-center text-[#048C7F]">Create An Account</h2>
+        <form className="mx-auto w-3/5" name='signUpform' onSubmit={handleSubmit}>
           <div className='d-flex flex-column flex-lg-row flex-sm-column mt-5'>
             <div className='col-12 col-sm-12 col-lg-6  form-floating mx-2 '>
               <input
                 type="text"
                 id="firstName"
                 name="firstName"
-                className="form-control"
                 placeholder="first name"
                 value={firstName}
                 required
                 onChange={(event) => setFirstName(event.target.value)}
+                className="form-control !rounded-none !border-0 !border-b !border-b-[#c0c0c0] !bg-transparent"
               />
               <label htmlFor="firstName">First Name</label>
             </div>
@@ -111,11 +110,11 @@ function SignupPage() {
                 type="text"
                 id="lastName"
                 name="lastName"
-                className="form-control"
                 placeholder="last name"
                 value={lastName}
                 required
                 onChange={(event) => setLastName(event.target.value)}
+                className="form-control !rounded-none !border-0 !border-b !border-b-[#c0c0c0] !bg-transparent"
               />
               <label htmlFor="lastName">Last Name</label>
             </div>
@@ -129,7 +128,7 @@ function SignupPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="form-control"
+              className="form-control !rounded-none !border-0 !border-b !border-b-[#c0c0c0] !bg-transparent"
             />
             <label htmlFor="email" >Email</label>
           </div>
@@ -140,7 +139,7 @@ function SignupPage() {
               name="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="form-control"
+              className="form-control !rounded-none !border-0 !border-b !border-b-[#c0c0c0] !bg-transparent"
               required
               placeholder="password"
             />
@@ -156,7 +155,7 @@ function SignupPage() {
               name="confirmPassword"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              className="form-control"
+              className="form-control !rounded-none !border-0 !border-b !border-b-[#c0c0c0] !bg-transparent"
               required
               placeholder="confirm password"
             />
@@ -173,25 +172,24 @@ function SignupPage() {
               name="userType"
               value={userType}
               onChange={(event) => setUserType(event.target.value)}
-              className="form-select"
+              className="form-select !rounded-none !border-0 !border-b !border-b-[#c0c0c0] !bg-transparent"
               required
             >
               <option value=""></option>
               <option value="Patient">Patient</option>
-              <option value="Doctor">Doctor</option>
-              <option value="Nurse">Nurse</option>
+              <option value="Staff">Staff</option>
             </select>
             <label htmlFor="userType">User Type</label>
           </div>
           <div className="form-group form-check mt-5 mx-2">
-            <input type="checkbox" className="form-check-input" id="terms-chkbox" required />
+            <input type="checkbox" className="form-check-input !rounded-[3px] !border !border-black" id="terms-chkbox" required />
             <label className='' htmlFor="terms-chkbox">I agree with the terms and conditons</label>
           </div>
           <div className='text-center'>
-            <button id={styles.signUpBtn} type="submit">Sign Up</button>
+            <button className="m-10 bg-[#31b372] px-[60px] py-2.5 text-white transition duration-100 ease-in-out hover:scale-110 max-[1000px]:px-[50px]" type="submit">Sign Up</button>
           </div>
           <div className='text-center'>
-            Already have an account? <NavLink to="/login" exact >Sign In</NavLink>
+            Already have an account? <NavLink to="/login">Sign In</NavLink>
           </div>
 
         </form>

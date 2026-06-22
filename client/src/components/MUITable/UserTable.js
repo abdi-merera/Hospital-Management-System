@@ -21,12 +21,13 @@ import { NavLink, useNavigate } from 'react-router-dom';
 const columns = [
     { id: 'Name', label: 'Name', minWidth: 170 },
     { id: 'Email', label: 'Email', minWidth: 170 },
-    { id: 'Role', label: 'Role', minWidth: 170 },
+    { id: 'Role', label: 'Account Type', minWidth: 170 },
+    { id: 'AccessRole', label: 'Access Role', minWidth: 170 },
     { id: 'actionsID', label: 'Actions', minWidth: 100 },
 ];
 
-function createData(Name, Email, Role, actionsID) {
-    return { Name, Email, Role, actionsID };
+function createData(Name, Email, Role, AccessRole, actionsID) {
+    return { Name, Email, Role, AccessRole, actionsID };
 }
 
 // const rows = [
@@ -71,11 +72,17 @@ export default function UserTable({ userList, deleteUser }) {
     };
 
     let rows = userList.map((user) => {
+        const accessRole = (user.roles || [])
+            .map((role) => role.name || role)
+            .filter(Boolean)
+            .join(', ') || '-';
+
         // console.log("inside map",await getPatientByID(apt.patientId))
         return createData(
             user.firstName + " " + user.lastName,
             user.email,
             user.userType,
+            accessRole,
             user._id,
 
         )
@@ -149,7 +156,7 @@ export default function UserTable({ userList, deleteUser }) {
                                                     </TableCell>
                                                 );
                                             }
-                                            else if (column.id == 'Role') {
+                                            else if (column.id == 'Role' || column.id == 'AccessRole') {
                                                 return (
                                                     <TableCell key={column.id} align={column.align}>
                                                         <span className="custom-badge status-green">{value}</span>

@@ -1,17 +1,16 @@
 const Patient = require("../models/patient.js");
 const Prescription = require("../models/prescription.js");
 const User = require("../models/user.js");
+const bcrypt = require("bcrypt");
 
 const getPatients = async (req, res) => {
-
     try {
-        var searchpatient = new RegExp(req.query.name, 'i');
-
         let patients = [];
-        if (!searchpatient) {
+        if (!req.query.name) {
             patients = await Patient.find({}).populate('userId');
-
         } else {
+            const escaped = String(req.query.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchpatient = new RegExp(escaped, 'i');
             patients = await Patient.find().populate({
                 path: 'userId',
                 select: 'firstName lastName email username',
@@ -22,9 +21,9 @@ const getPatients = async (req, res) => {
                         { email: { $regex: searchpatient } }
                     ]
                 }
-            }).then((patients) => patients.filter((patient => patient.userId != null)));
+            });
+            patients = patients.filter(patient => patient.userId != null);
         }
-
         res.json(patients);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -40,117 +39,80 @@ const getPatientById = async (req, res) => {
     }
 }
 
-
 const isPatientValid = (newPatient) => {
     let errorList = [];
-    if (!newPatient.firstName) {
-        errorList[errorList.length] = "Please enter first name";
-    }
-    if (!newPatient.lastName) {
-        errorList[errorList.length] = "Please enter last name";
-    }
-    if (!newPatient.email) {
-        errorList[errorList.length] = "Please enter email";
-    }
-    if (!newPatient.password) {
-        errorList[errorList.length] = "Please enter password";
-    }
-    if (!newPatient.confirmPassword) {
-        errorList[errorList.length] = "Please re-enter password in Confirm Password field";
-    }
-    if (!(newPatient.password == newPatient.confirmPassword)) {
-        errorList[errorList.length] = "Password and Confirm Password did not match";
-    }
-    if (!newPatient.phone) {
-        errorList[errorList.length] = "Please enter phone";
-    }
-
-    if (errorList.length > 0) {
-        result = {
-            status: false,
-            errors: errorList
-        }
-        return result;
-    }
-    else {
-        return { status: true };
-    }
-
+    if (!newPatient.firstName) errorList.push("Please enter first name");
+    if (!newPatient.lastName) errorList.push("Please enter last name");
+    if (!newPatient.email) errorList.push("Please enter email");
+    if (!newPatient.password) errorList.push("Please enter password");
+    if (!newPatient.confirmPassword) errorList.push("Please re-enter password in Confirm Password field");
+    if (newPatient.password !== newPatient.confirmPassword) errorList.push("Password and Confirm Password did not match");
+    if (!newPatient.phone) errorList.push("Please enter phone");
+    return errorList.length > 0 ? { status: false, errors: errorList } : { status: true };
 }
 
 const savePatient = async (req, res) => {
-    let newPatient = req.body;
-    let PatientValidStatus = isPatientValid(newPatient);
+    const newPatient = req.body;
+    const PatientValidStatus = isPatientValid(newPatient);
     if (!PatientValidStatus.status) {
-        res.status(400).json({
-            message: 'error',
-            errors: PatientValidStatus.errors
-        });
+        return res.status(400).json({ message: 'error', errors: PatientValidStatus.errors });
     }
-    else {
-        //const patient = new Patient(req.body);
-        User.create(
-            {
-                email: newPatient.email,
-                username: newPatient.username,
-                firstName: newPatient.firstName,
-                lastName: newPatient.lastName,
-                password: newPatient.password,
-                userType: 'Patient',
-                activated: 1,
-            },
-            (error, userDetails) => {
-                if (error) {
-                    res.status(400).json({ message: "error", errors: [error.message] });
-                } else {
-                    newPatient.userId = userDetails._id,
-                        Patient.create(newPatient,
-                            (error2, patientDetails) => {
-                                if (error2) {
-                                    User.deleteOne({ _id: userDetails });
-                                    res.status(400).json({ message: 'error', errors: [error2.message] });
-                                } else {
-                                    res.status(201).json({ message: 'success' });
-                                }
-                            }
-                        );
-                }
-            }
-        );
+    try {
+        const userDetails = await User.create({
+            email: newPatient.email,
+            username: newPatient.username,
+            firstName: newPatient.firstName,
+            lastName: newPatient.lastName,
+            password: newPatient.password,
+            userType: 'Patient',
+            activated: true,
+        });
+        try {
+            await Patient.create({
+                userId: userDetails._id,
+                phone: newPatient.phone,
+                address: newPatient.address,
+                gender: newPatient.gender,
+                dob: newPatient.dob
+            });
+            res.status(201).json({ message: 'success' });
+        } catch (error2) {
+            await User.deleteOne({ _id: userDetails._id });
+            res.status(400).json({ message: 'error', errors: [error2.message] });
+        }
+    } catch (error) {
+        res.status(400).json({ message: "error", errors: [error.message] });
     }
 }
 
 const updatePatient = async (req, res) => {
-    let newPatient = req.body;
-    let PatientValidStatus = isPatientValid(newPatient);
+    const newPatient = req.body;
+    const PatientValidStatus = isPatientValid(newPatient);
     if (!PatientValidStatus.status) {
-        res.status(400).json({
-            message: 'error',
-            errors: PatientValidStatus.errors
-        });
+        return res.status(400).json({ message: 'error', errors: PatientValidStatus.errors });
     }
-    else {
-        try {
-            const updatedPatient = await Patient.updateOne({ _id: req.params.id }, { $set: { "phone": req.body.phone, "address": req.body.address, "gender": req.body.gender, "dob": req.body.dob } });
+    try {
+        await Patient.updateOne({ _id: req.params.id }, { $set: { phone: req.body.phone, address: req.body.address, gender: req.body.gender, dob: req.body.dob } });
 
-            const updateduser = await User.updateOne({ _id: req.body.userId }, { $set: { "firstName": req.body.firstName, "lastName": req.body.lastName, "email": req.body.email, "username": req.body.username, "password": req.body.password } });
-
-            res.status(201).json({ message: 'success' });
-        } catch (error) {
-            res.status(400).json({ message: 'error', errors: [error.message] });
+        const userUpdate = { firstName: req.body.firstName, lastName: req.body.lastName, email: req.body.email, username: req.body.username };
+        if (req.body.password) {
+            userUpdate.password = await bcrypt.hash(req.body.password, 10);
         }
+        await User.updateOne({ _id: req.body.userId }, { $set: userUpdate });
+
+        res.status(201).json({ message: 'success' });
+    } catch (error) {
+        res.status(400).json({ message: 'error', errors: [error.message] });
     }
 }
 
 const deletePatient = async (req, res) => {
     try {
-        const patient = await Doctor.findById(req.params.id).populate('userId');
-
-        const deletedPatient = await Patient.deleteOne({ _id: req.params.id });
-
-        const deleteduser = await User.deleteOne({ _id: patient.userId._id });
-
-        res.status(200).json(deletedPatient);
+        const patient = await Patient.findById(req.params.id).populate('userId');
+        if (!patient) return res.status(404).json({ message: 'Patient not found' });
+        await Patient.deleteOne({ _id: req.params.id });
+        await User.deleteOne({ _id: patient.userId._id });
+        res.status(200).json({ message: 'success' });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -158,42 +120,21 @@ const deletePatient = async (req, res) => {
 
 const getPatientHistory = async (req, res) => {
     try {
-        let prescriptions = await Prescription.find().populate({
+        const allPrescriptions = await Prescription.find().populate({
             path: 'prescribedMed.medicineId',
         }).populate({
             path: 'appointmentId',
-            match: {patientId:req.params.id},
+            match: { patientId: req.params.id },
             populate: [
-                {
-                    path: 'patientId',
-                    populate: {
-                        path: 'userId'
-                    }
-                },
-                {
-                    path: 'doctorId',
-                    populate: {
-                        path: 'userId'
-                    }
-                }
+                { path: 'patientId', populate: { path: 'userId' } },
+                { path: 'doctorId', populate: { path: 'userId' } }
             ]
-        }).then((prescriptions) => prescriptions.filter((pre => pre.appointmentId != null)));
-
-        res.status(200).json({
-            "message":"success",
-            "prescriptions":prescriptions
         });
+        const prescriptions = allPrescriptions.filter(pre => pre.appointmentId != null);
+        res.status(200).json({ message: "success", prescriptions });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 }
 
-
-module.exports = {
-    getPatients,
-    getPatientById,
-    savePatient,
-    updatePatient,
-    deletePatient,
-    getPatientHistory
-}
+module.exports = { getPatients, getPatientById, savePatient, updatePatient, deletePatient, getPatientHistory };

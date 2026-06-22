@@ -1,9 +1,12 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const bcrypt = require("bcrypt");
-
 const PatientSchema = new Schema({
+  medicalRecordNo: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
@@ -14,6 +17,18 @@ const PatientSchema = new Schema({
   address: {
     type: String
   },
+  region: {
+    type: String
+  },
+  city: {
+    type: String
+  },
+  woreda: {
+    type: String
+  },
+  age: {
+    type: Number
+  },
   gender: {
     type: String
   },
@@ -21,17 +36,6 @@ const PatientSchema = new Schema({
     type: String
   }
 });
-
-//hashing password
-PatientSchema.pre('save', function (next) {
-  const patient = this
-
-  bcrypt.hash(patient.password, 10, (error, hash) => {
-    patient.password = hash
-    next()
-  })
-})
-
 
 const Patient = mongoose.model("Patient", PatientSchema);
 

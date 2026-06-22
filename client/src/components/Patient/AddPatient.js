@@ -14,9 +14,11 @@ function AddPatient() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [region, setRegion] = useState('');
+  const [city, setCity] = useState('');
+  const [woreda, setWoreda] = useState('');
   const [gender, setGender] = useState('');
-  const [dob, setDOB] = useState('');
+  const [age, setAge] = useState('');
   const [passwordMatchDisplay, setPasswordMatchDisplay] = useState('none');
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('')
   const [errorDialogueBoxOpen, setErrorDialogueBoxOpen] = useState(false);
@@ -27,6 +29,21 @@ function AddPatient() {
   const handleDialogueClose = () => {
     setErrorList([]);
     setErrorDialogueBoxOpen(false)
+  };
+
+  const clearPatientForm = () => {
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setUsername('');
+    setPassword('');
+    setConfirmPassword('');
+    setPhone('');
+    setRegion('');
+    setCity('');
+    setWoreda('');
+    setGender('');
+    setAge('');
   };
 
   const addPatient = (event) => {
@@ -41,16 +58,19 @@ function AddPatient() {
       phone: form.phone.value,
       password: form.password.value,
       confirmPassword: form.confirmPassword.value,
-      address: form.address.value,
+      region: form.region.value,
+      city: form.city.value,
+      woreda: form.woreda.value,
       gender: form.gender.value,
-      dob: form.dob.value
+      age: form.age.value
     }
 
 
     fetch('http://localhost:3001/patients', {
       method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        authorization: `Bearer ${localStorage.getItem("token")}`
       },
       body: JSON.stringify(patient)
     })
@@ -144,8 +164,20 @@ function AddPatient() {
                     </div>
                     <div className="col-sm-6">
                       <div className="form-group">
-                        <label>Address </label>
-                        <input name="address" className="form-control" type="text" value={address} onChange={(event) => setAddress(event.target.value)} />
+                        <label>Region</label>
+                        <input name="region" className="form-control" type="text" value={region} onChange={(event) => setRegion(event.target.value)} />
+                      </div>
+                    </div>
+                    <div className="col-sm-6">
+                      <div className="form-group">
+                        <label>City/Sub-City</label>
+                        <input name="city" className="form-control" type="text" value={city} onChange={(event) => setCity(event.target.value)} />
+                      </div>
+                    </div>
+                    <div className="col-sm-6">
+                      <div className="form-group">
+                        <label>Woreda</label>
+                        <input name="woreda" className="form-control" type="text" value={woreda} onChange={(event) => setWoreda(event.target.value)} />
                       </div>
                     </div>
                     <div className="col-sm-6">
@@ -159,14 +191,15 @@ function AddPatient() {
                     </div>
                     <div className="col-sm-6">
                       <div className="form-group">
-                        <label>Date of Birth </label>
-                        <input name="dob" className="form-control" type="date" value={dob} onChange={(event) => setDOB(event.target.value)} />
+                        <label>Age</label>
+                        <input name="age" className="form-control" type="number" min="0" value={age} onChange={(event) => setAge(event.target.value)} />
                       </div>
                     </div>
 
                   </div>
 
                   <div className="m-t-20 text-center">
+                    <button type="button" className="btn btn-outline-secondary submit-btn me-3" onClick={clearPatientForm}>Clear</button>
                     <button id="addPatient" type="submit" className="btn btn-primary submit-btn">Create Patient</button>
                   </div>
                 </form>

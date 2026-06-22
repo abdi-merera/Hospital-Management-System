@@ -142,7 +142,7 @@ function PrescriptionForm(props) {
         <form name={props.formName} onSubmit={props.formOnSubmit}>
             <div className="form-row">
                 <div className="form-group col-11 pl-3 mx-auto">
-                    <label for="patient">Patient Name:</label>
+                    <label htmlFor="patient">Patient Name:</label>
                     <select name="patient" className="form-control" disabled>
                         {props.patientList
                             .map((patient, i) => {
@@ -158,8 +158,8 @@ function PrescriptionForm(props) {
             </div>
             <div className="row">
                 <div className="form-group col-11 pl-3 mx-auto">
-                    <label for="remarks">Remarks</label>
-                    <textarea class="form-control" id="remarks" name="remarks" rows="3"></textarea>
+                    <label htmlFor="remarks">Remarks</label>
+                    <textarea className="form-control" id="remarks" name="remarks" rows="3"></textarea>
                 </div>
             </div>
             <div className="medicineDiv">

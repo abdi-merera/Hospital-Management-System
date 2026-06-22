@@ -9,39 +9,40 @@ function AppointmentForm(props) {
         <form name={props.formName} onSubmit={props.formOnSubmit}>
             <div className="form-row">
                 <div className="form-group col-11 mx-auto">
-                    <label for="appDate">Appointment Date :</label>
+                    <label htmlFor="appDate">Appointment Date :</label>
                     <input type="text" name="appDate" className="form-control " disabled defaultValue={props.appDate} required></input>
                 </div>
 
                 <div className="form-group col-11 pl-3 mx-auto">
-                    <label for="LastName">Appointment Time :</label>
+                    <label htmlFor="LastName">Appointment Time :</label>
                     {/* <input type="text" name="lastName" placeholder="Appointment Date" className="form-control" required defaultValue={props.lastName}  ></input> */}
-                    <select name="appTime" id="appTime" className="form-control" aria-label="Default select example" required>
-                        <option selected value={props.appTime}>{props.appTime}</option>
+                    <select name="appTime" id="appTime" className="form-control" aria-label="Default select example" required defaultValue={props.appTime}>
+                        <option value={props.appTime}>{props.appTime}</option>
                         {
                             props.availableSlots.map(slot => {
-                                if (props.appTime != slot)
-                                    return <option value={slot}>{slot}</option>
+                                if (props.appTime !== slot)
+                                    return <option key={slot} value={slot}>{slot}</option>
+                                return null;
                             })
                         }
                     </select>
                 </div>
 
                 <div className="form-group col-11 pl-3 mx-auto">
-                    {/* <label for="doctor">Doctor :</label>
+                    {/* <label htmlFor="doctor">Doctor :</label>
                     <select name="doctor" id="doctor" className="form-control" aria-label="Default select example" required disabled>
                         <option selected value={props.doctor.doctorId}>{props.doctor.firstName} {props.doctor.lastName}</option>
                     </select> */}
-                    <label for="doctor">Doctor: </label>
-                    <select name="doctor" id="doctor" className="form-control" aria-label="Default select example" required disabled={props.doctorSelected ? 'true' : null}>
+                    <label htmlFor="doctor">Doctor: </label>
+                    <select name="doctor" id="doctor" className="form-control" aria-label="Default select example" required defaultValue={props.doctorSelected || ''} disabled={Boolean(props.doctorSelected)}>
                         <option value=''>Choose Doctor</option>
                         {
                             props.doctorList.map(doctor => {
-                                if (props.doctorSelected == doctor._id) {
-                                    return <option value={doctor._id} selected>{doctor.userId.firstName} {doctor.userId.lastName}</option>
+                                if (props.doctorSelected === doctor._id) {
+                                    return <option key={doctor._id} value={doctor._id}>{doctor.userId.firstName} {doctor.userId.lastName}</option>
                                 }
                                 else {
-                                    return <option value={doctor._id} >{doctor.userId.firstName} {doctor.userId.lastName}</option>
+                                    return <option key={doctor._id} value={doctor._id} >{doctor.userId.firstName} {doctor.userId.lastName}</option>
                                 }
 
                             })
@@ -49,12 +50,13 @@ function AppointmentForm(props) {
                     </select>
                 </div>
                 <div className="form-group col-11 pl-3 mx-auto">
-                    <label for="patient">Patient :</label>
-                    <select name="patient" className="form-control" disabled={currentUser.userType == "Patient" ? true : null}>
+                    <label htmlFor="patient">Patient :</label>
+                    <select name="patient" className="form-control" required defaultValue={props.patientSelected || ''} disabled={currentUser.userType === "Patient"}>
+                        <option value='' disabled>Choose Patient</option>
                         {props.patientList
                             .map((patient, i) => {
-                                if (props.patientSelected == patient._id) {
-                                    return <option key={i} value={patient._id} selected>{patient.userId.firstName} {patient.userId.lastName}</option>
+                                if (props.patientSelected === patient._id) {
+                                    return <option key={i} value={patient._id}>{patient.userId.firstName} {patient.userId.lastName}</option>
                                 }
                                 else {
                                     return <option key={i} value={patient._id}>{patient.userId.firstName} {patient.userId.lastName}</option>

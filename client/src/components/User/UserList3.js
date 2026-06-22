@@ -91,11 +91,11 @@ function UserList() {
                                 <div className="form-floating">
                                     <select name="role" className="form-select floating">
                                         <option value="">All</option>
-                                        <option value="Doctor">Doctor</option>
+                                        <option value="Staff">Staff</option>
                                         <option value="Admin">Admin</option>
                                         <option value="Patient">Patient</option>
                                     </select>
-                                    <label htmlFor='role' className="focus-label">Role</label>
+                                    <label htmlFor='role' className="focus-label">Account Type</label>
                                 </div>
                             </div>
                             <div className="col-sm-4 col-md-4">
@@ -113,7 +113,7 @@ function UserList() {
                                             <th>Sr. No</th>
                                             <th>Name</th>
                                             <th>Email</th>
-                                            <th>Role</th>
+                                            <th>Account Type</th>
                                             <th className="text-right">Action</th>
                                         </tr>
                                     </thead>

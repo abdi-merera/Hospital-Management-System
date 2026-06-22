@@ -34,7 +34,11 @@ function PrescriptionList() {
     };
 
     const getPatients = async () => {
-        const response = await axios.get("http://localhost:3001/patients");
+        const response = await axios.get("http://localhost:3001/patients", {
+            headers: {
+                authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        });
         setPatientList(response.data);
     };
 

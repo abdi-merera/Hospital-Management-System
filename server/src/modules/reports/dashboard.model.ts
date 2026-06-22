@@ -1,0 +1,10 @@
+export const User = require('../../../models/user');
+export const Appointment = require('../../../models/appointment');
+export const Prescription = require('../../../models/prescription');
+export const Patient = require('../../../models/patient');
+export const Encounter = require('../../../models/encounter');
+export const Admission = require('../../../models/admission');
+export const Bed = require('../../../models/bed');
+export const Invoice = require('../../../models/invoice');
+export const Payment = require('../../../models/payment');
+export const AuditLog = require('../../../models/auditLog');
